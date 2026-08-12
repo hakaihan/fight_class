@@ -1,0 +1,47 @@
+{
+	"_comment": "수치는 구조 검증용 시작값입니다. 실제 밸런스(8~12턴 종료, MP 2~3턴 회복, 힐<강타)는 이 파일만 수정해서 튜닝하세요.",
+
+	"warrior_slash": {
+		"charId": "warrior", "label": "베기", "kind": "damage",
+		"mpCost": 0, "cooldown": 0, "multiplier": 1.0, "variance": 0.1
+	},
+	"warrior_smash": {
+		"charId": "warrior", "label": "강타", "kind": "damage",
+		"mpCost": 20, "cooldown": 0, "multiplier": 2.2, "variance": 0.1,
+		"appliesEffect": {
+			"id": "atk_down", "kind": "stat_mod", "duration": 3, "stackRule": "refresh",
+			"payload": { "stat": "atk", "mult": 0.7 }
+		}
+	},
+
+	"archer_shot": {
+		"charId": "archer", "label": "사격", "kind": "damage",
+		"mpCost": 0, "cooldown": 0, "multiplier": 1.0, "variance": 0.25
+	},
+	"archer_pierce": {
+		"charId": "archer", "label": "관통 사격", "kind": "damage",
+		"mpCost": 18, "cooldown": 0, "multiplier": 1.3, "variance": 0.15,
+		"appliesEffect": {
+			"id": "bleed", "kind": "dot", "duration": 3, "stackRule": "refresh",
+			"payload": { "tickRatio": 0.5 }
+		}
+	},
+
+	"mage_bolt": {
+		"charId": "mage", "label": "마력탄", "kind": "damage",
+		"mpCost": 0, "cooldown": 0, "multiplier": 0.8, "variance": 0.1
+	},
+	"mage_burst": {
+		"charId": "mage", "label": "파열 마법", "kind": "damage",
+		"mpCost": 28, "cooldown": 0, "multiplier": 3.0, "variance": 0.1,
+		"appliesEffect": {
+			"id": "silence", "kind": "control", "duration": 2, "stackRule": "refresh",
+			"payload": { "block": "mpRegen" }
+		}
+	},
+
+	"heal_common": {
+		"charId": null, "label": "회복", "kind": "heal",
+		"mpCost": 22, "cooldown": 3, "healRatio": 0.22
+	}
+}

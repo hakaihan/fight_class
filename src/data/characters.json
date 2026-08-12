@@ -1,0 +1,32 @@
+{
+	"warrior": {
+		"name": "전사",
+		"maxHp": 100,
+		"maxMp": 50,
+		"atk": 12,
+		"mpRegen": 8,
+		"color": "#e5e7eb",
+		"weapon": "sword",
+		"skills": { "basic": "warrior_slash", "attack": "warrior_smash", "heal": "heal_common" }
+	},
+	"archer": {
+		"name": "궁수",
+		"maxHp": 90,
+		"maxMp": 60,
+		"atk": 10,
+		"mpRegen": 10,
+		"color": "#86efac",
+		"weapon": "bow",
+		"skills": { "basic": "archer_shot", "attack": "archer_pierce", "heal": "heal_common" }
+	},
+	"mage": {
+		"name": "마법사",
+		"maxHp": 80,
+		"maxMp": 70,
+		"atk": 9,
+		"mpRegen": 12,
+		"color": "#c4b5fd",
+		"weapon": "staff",
+		"skills": { "basic": "mage_bolt", "attack": "mage_burst", "heal": "heal_common" }
+	}
+}

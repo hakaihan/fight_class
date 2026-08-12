@@ -1,0 +1,89 @@
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: #111827;
+  color: #f9fafb;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.screen {
+  display: none;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.screen.active { display: flex; }
+
+.card {
+  background: #1f2937;
+  border-radius: 1rem;
+  padding: 2rem;
+  width: min(420px, 100%);
+  text-align: center;
+}
+.card h1 { margin-top: 0; font-size: 1.6rem; }
+
+label { display: block; text-align: left; font-size: 0.85rem; color: #9ca3af; margin: 1rem 0 0.25rem; }
+input {
+  width: 100%; padding: 0.6rem 0.8rem; border-radius: 0.5rem;
+  border: 1px solid #374151; background: #111827; color: #f9fafb; font-size: 1rem;
+}
+.divider { color: #6b7280; margin: 1rem 0; font-size: 0.85rem; }
+
+button {
+  width: 100%; margin-top: 0.75rem; padding: 0.7rem; font-size: 1rem;
+  border: none; border-radius: 0.6rem; background: #374151; color: #f9fafb; cursor: pointer;
+}
+button:hover { background: #4b5563; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button.primary { background: #3b82f6; }
+button.primary:hover { background: #2563eb; }
+
+.error { color: #f87171; min-height: 1.2em; font-size: 0.9rem; }
+
+.player-list { list-style: none; padding: 0; text-align: left; }
+.player-list li { padding: 0.3rem 0; color: #d1d5db; }
+
+.char-cards { display: flex; gap: 0.75rem; margin-top: 1rem; }
+.char-card {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  padding: 1rem 0.5rem; background: #111827; border: 2px solid #374151;
+}
+.char-card.selected { border-color: #3b82f6; background: #1e3a8a33; }
+.char-icon { font-size: 2rem; }
+#select-status { color: #9ca3af; margin-top: 1rem; min-height: 1.2em; }
+
+/* 전투 화면 */
+#screen-battle { flex-direction: column; gap: 1rem; }
+.hud { display: flex; align-items: center; gap: 1.5rem; width: min(800px, 100%); }
+.hud-panel { flex: 1; }
+.hud-name { font-weight: 600; margin-bottom: 0.3rem; }
+#hud-opponent { text-align: right; }
+.turn-indicator { flex: 0 0 auto; color: #9ca3af; font-size: 0.9rem; white-space: nowrap; }
+
+.bar { position: relative; height: 14px; border-radius: 7px; background: #374151; margin-bottom: 0.4rem; overflow: hidden; }
+.bar-fill { position: absolute; inset: 0; width: 100%; transform-origin: left; transition: width 0.25s ease-out; }
+.bar.hp .bar-fill { background: #ef4444; }
+.bar.mp .bar-fill { background: #3b82f6; }
+#hud-opponent .bar-fill { transform-origin: right; right: 0; left: auto; }
+.bar-label {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 0.65rem; color: #f9fafb; text-shadow: 0 1px 1px #000;
+}
+
+#battle-canvas { background: #111827; border-radius: 0.75rem; max-width: 100%; }
+
+.skill-bar { display: flex; gap: 0.75rem; width: min(800px, 100%); }
+.skill-btn { margin-top: 0; }
+
+.battle-log {
+  width: min(800px, 100%); height: 90px; overflow-y: auto; background: #1f2937;
+  border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.85rem; color: #d1d5db;
+}
+.battle-log p { margin: 0.15rem 0; }
+
+#end-title { font-size: 2rem; }
+#end-streak { color: #9ca3af; }
