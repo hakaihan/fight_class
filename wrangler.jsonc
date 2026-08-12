@@ -1,0 +1,13 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	// Worker name — becomes <name>.<your-subdomain>.workers.dev
+	"name": "fight-class",
+	// Keep this close to "today" when you touch this file; see
+	// https://developers.cloudflare.com/workers/configuration/compatibility-dates/
+	"compatibility_date": "2026-08-12",
+	// No build step, no Worker script — just serve the static files in this repo.
+	"assets": {
+		"directory": "./",
+		"not_found_handling": "404-page"
+	}
+}
