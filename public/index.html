@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>턴제 대전</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- 로비: 닉네임 입력 후 방 생성 또는 코드로 입장 -->
+<section id="screen-lobby" class="screen active">
+  <div class="card">
+    <h1>턴제 1:1 대전</h1>
+    <label>닉네임<input id="nickname-input" maxlength="20" placeholder="닉네임"></label>
+    <button id="create-room-btn" class="primary">방 만들기</button>
+    <div class="divider">또는</div>
+    <label>방 코드<input id="room-code-input" maxlength="6" placeholder="ABCD12" style="text-transform:uppercase"></label>
+    <button id="join-room-btn">코드로 입장</button>
+    <p id="lobby-error" class="error"></p>
+  </div>
+</section>
+
+<!-- 캐릭터 선택: 방 코드 공유 + 3종 캐릭터 선택 -->
+<section id="screen-select" class="screen">
+  <div class="card">
+    <p>방 코드: <strong id="room-code-display"></strong></p>
+    <ul id="player-list" class="player-list"></ul>
+    <h2>캐릭터를 선택하세요</h2>
+    <div id="char-cards" class="char-cards">
+      <button class="char-card" data-char="warrior">
+        <div class="char-icon char-warrior">⚔</div><span>전사</span>
+      </button>
+      <button class="char-card" data-char="archer">
+        <div class="char-icon char-archer">🏹</div><span>궁수</span>
+      </button>
+      <button class="char-card" data-char="mage">
+        <div class="char-icon char-mage">🔮</div><span>마법사</span>
+      </button>
+    </div>
+    <p id="select-status"></p>
+  </div>
+</section>
+
+<!-- 전투 화면 -->
+<section id="screen-battle" class="screen">
+  <div class="hud">
+    <div class="hud-panel" id="hud-me">
+      <div class="hud-name"></div>
+      <div class="bar hp"><div class="bar-fill"></div><span class="bar-label"></span></div>
+      <div class="bar mp"><div class="bar-fill"></div><span class="bar-label"></span></div>
+    </div>
+    <div class="turn-indicator" id="turn-indicator">턴 1</div>
+    <div class="hud-panel" id="hud-opponent">
+      <div class="hud-name"></div>
+      <div class="bar hp"><div class="bar-fill"></div><span class="bar-label"></span></div>
+      <div class="bar mp"><div class="bar-fill"></div><span class="bar-label"></span></div>
+    </div>
+  </div>
+
+  <canvas id="battle-canvas" width="800" height="360"></canvas>
+
+  <div class="skill-bar">
+    <button class="skill-btn" data-slot="basic">기본 공격</button>
+    <button class="skill-btn" data-slot="attack">스킬</button>
+    <button class="skill-btn" data-slot="heal">회복</button>
+  </div>
+
+  <div id="battle-log" class="battle-log"></div>
+</section>
+
+<!-- 종료 화면 -->
+<section id="screen-end" class="screen">
+  <div class="card">
+    <h1 id="end-title"></h1>
+    <p id="end-streak"></p>
+    <button id="rematch-btn" class="primary">재대결</button>
+    <button id="lobby-btn">로비로</button>
+  </div>
+</section>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

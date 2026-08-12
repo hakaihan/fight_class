@@ -1,0 +1,28 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	// Worker name — becomes <name>.<your-subdomain>.workers.dev
+	"name": "fight-class",
+	"main": "src/worker.js",
+	// Keep this recent (within ~30 days) when you touch this file; see
+	// https://developers.cloudflare.com/workers/configuration/compatibility-dates/
+	// (한동안은 오늘 날짜보다 살짝 과거로 — 로컬 wrangler dev의 workerd 바이너리가
+	// 최신 날짜를 아직 지원하지 않으면 로컬 개발이 막힌다.)
+	"compatibility_date": "2026-07-15",
+	// Static client (index.html/css/js) — served ahead of the Worker for matching paths.
+	// /ws doesn't match a file, so it falls through to the Worker's fetch handler below.
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS",
+		"not_found_handling": "404-page"
+	},
+	// One BattleRoom Durable Object instance per room code — holds the two
+	// WebSocket connections and the server-authoritative battle state.
+	"durable_objects": {
+		"bindings": [
+			{ "name": "BATTLE_ROOM", "class_name": "BattleRoom" }
+		]
+	},
+	"migrations": [
+		{ "tag": "v1", "new_sqlite_classes": ["BattleRoom"] }
+	]
+}
