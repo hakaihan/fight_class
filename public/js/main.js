@@ -27,6 +27,7 @@ function charIdOf(seatKey, snapshot) {
 
 ui.el.createRoomBtn.addEventListener('click', () => joinOrCreate('create'));
 ui.el.joinRoomBtn.addEventListener('click', () => joinOrCreate('join'));
+ui.el.aiRoomBtn.addEventListener('click', () => joinOrCreate('ai'));
 
 async function joinOrCreate(action) {
 	const nickname = ui.el.nicknameInput.value.trim();
@@ -67,7 +68,7 @@ function onRoomState(payload) {
 
 	if (payload.phase === 'lobby' || payload.phase === 'select') {
 		ui.showScreen('select');
-		ui.renderSelectScreen(payload.roomId, payload.players);
+		ui.renderSelectScreen(payload.roomId, payload.players, payload.vsAI);
 	}
 }
 

@@ -18,6 +18,9 @@ HTML/JS다.
   확정한다.
 - **데이터 주도 스킬**: 캐릭터 스탯(`src/data/characters.json`)과 스킬(`src/data/skills.json`)은
   전부 데이터 파일. 밸런스 조정은 이 두 파일만 고치면 된다.
+- **AI 대전**: 로비에서 "AI와 대전"을 고르면 실제 소켓 없는 "가상 플레이어"가 방의 두 번째
+  자리(p2)로 들어간다. 캐릭터는 랜덤으로, 스킬은 규칙 기반(`src/ai.js`)으로 고른다 — 사람의
+  행동이 처리된 직후 서버가 AI 차례를 곧바로 대신 처리해서 같은 `battle:turn` 흐름을 탄다.
 
 ## 디렉토리 구조
 
@@ -28,6 +31,7 @@ src/
   room.js              BattleRoom Durable Object — 로비/캐릭터선택/전투진행/재대결/이탈 처리
   battle.js            턴 처리 순수 함수 (소켓과 분리, node --test로 바로 검증 가능)
   effects.js           dot/stat_mod/control 3종 효과 해석기
+  ai.js                AI 대전 상대의 캐릭터/스킬 선택 로직 (규칙 기반, 순수 함수)
   data/
     characters.json    캐릭터별 기본 스탯
     skills.json        스킬 정의 (MP 소모, 배율, 부여 효과, 쿨다운) — 밸런스는 여기만 고치면 됨
