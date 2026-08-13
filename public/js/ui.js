@@ -11,6 +11,7 @@ export const el = {
 	createRoomBtn: document.getElementById('create-room-btn'),
 	roomCodeInput: document.getElementById('room-code-input'),
 	joinRoomBtn: document.getElementById('join-room-btn'),
+	aiRoomBtn: document.getElementById('ai-room-btn'),
 	lobbyError: document.getElementById('lobby-error'),
 
 	roomCodeDisplay: document.getElementById('room-code-display'),
@@ -41,8 +42,8 @@ export function setLobbyError(msg) {
 	el.lobbyError.textContent = msg || '';
 }
 
-export function renderSelectScreen(roomId, players) {
-	el.roomCodeDisplay.textContent = roomId;
+export function renderSelectScreen(roomId, players, vsAI) {
+	el.roomCodeDisplay.textContent = vsAI ? 'AI 대전' : roomId;
 	el.playerList.innerHTML = '';
 	for (const p of players) {
 		const li = document.createElement('li');
@@ -50,7 +51,7 @@ export function renderSelectScreen(roomId, players) {
 		li.textContent = `${p.nickname} — ${charName} (연승 ${p.streak})`;
 		el.playerList.appendChild(li);
 	}
-	el.selectStatus.textContent = players.length < 2 ? '상대를 기다리는 중…' : '';
+	el.selectStatus.textContent = !vsAI && players.length < 2 ? '상대를 기다리는 중…' : '';
 }
 
 export function markCharSelected(charId) {
@@ -62,7 +63,9 @@ export function markCharSelected(charId) {
 export function setSkillLabels(charId) {
 	const meta = CHAR_META[charId];
 	for (const btn of el.skillButtons) {
-		btn.textContent = meta.skillLabels[btn.dataset.slot];
+		const skill = meta.skills[Number(btn.dataset.index)];
+		btn.textContent = skill ? skill.label : '';
+		btn.style.display = skill ? '' : 'none';
 	}
 }
 

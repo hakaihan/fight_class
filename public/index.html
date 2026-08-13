@@ -17,6 +17,8 @@
     <div class="divider">또는</div>
     <label>방 코드<input id="room-code-input" maxlength="6" placeholder="ABCD12" style="text-transform:uppercase"></label>
     <button id="join-room-btn">코드로 입장</button>
+    <div class="divider">또는</div>
+    <button id="ai-room-btn">AI와 대전</button>
     <p id="lobby-error" class="error"></p>
   </div>
 </section>
@@ -61,9 +63,11 @@
   <canvas id="battle-canvas" width="800" height="360"></canvas>
 
   <div class="skill-bar">
-    <button class="skill-btn" data-slot="basic">기본 공격</button>
-    <button class="skill-btn" data-slot="attack">스킬</button>
-    <button class="skill-btn" data-slot="heal">회복</button>
+    <button class="skill-btn" data-index="0">기본 공격</button>
+    <button class="skill-btn" data-index="1">스킬 1</button>
+    <button class="skill-btn" data-index="2">스킬 2</button>
+    <button class="skill-btn" data-index="3">스킬 3</button>
+    <button class="skill-btn" data-index="4">회복</button>
   </div>
 
   <div id="battle-log" class="battle-log"></div>

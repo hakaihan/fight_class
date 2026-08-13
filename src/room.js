@@ -1,6 +1,9 @@
 import { DurableObject } from 'cloudflare:workers';
 import { C2S, S2C, CHAR_IDS } from '../public/shared/protocol.js';
 import { createInitialBattleState, applyAction } from './battle.js';
+import { chooseAiCharId, chooseAiSkill } from './ai.js';
+
+const EMPTY_ROOM = () => ({ players: [], phase: 'lobby', battle: null, rematchRequests: [], vsAI: false });
 
 // 방 하나 = 이 Durable Object 인스턴스 하나. 최대 2명, 메모리(this.ctx.storage)에만
 // 상태를 두고 프로세스가 정리되면 사라진다 — 계획서의 "영속화 불필요" 범위 그대로.
@@ -18,7 +21,7 @@ export class BattleRoom extends DurableObject {
 	async ensureLoaded() {
 		if (this.loaded) return;
 		const stored = await this.ctx.storage.get('room');
-		this.room = stored || { players: [], phase: 'lobby', battle: null, rematchRequests: [] };
+		this.room = stored || EMPTY_ROOM();
 		this.loaded = true;
 	}
 
@@ -53,6 +56,13 @@ export class BattleRoom extends DurableObject {
 		server.serializeAttachment({ playerId, roomId, nickname });
 
 		this.room.players.push({ id: playerId, nickname, charId: null, streak: 0, connected: true });
+
+		if (action === 'ai') {
+			// AI는 실제 소켓이 없는 "가상 플레이어" — 항상 두 번째 자리(p2)로 들어간다.
+			this.room.vsAI = true;
+			this.room.players.push({ id: 'ai-bot', nickname: 'AI', charId: null, streak: 0, isAI: true });
+		}
+
 		await this.persist();
 		this.broadcastRoomState();
 
@@ -94,13 +104,20 @@ export class BattleRoom extends DurableObject {
 		const leavingIndex = this.room.players.findIndex((p) => p.id === playerId);
 		if (leavingIndex === -1) return;
 
+		if (this.room.vsAI) {
+			// AI 대전은 사람이 나가면 상대할 사람도 알릴 사람도 없다 — 통째로 정리한다.
+			this.room = EMPTY_ROOM();
+			await this.persist();
+			return;
+		}
+
 		const wasInBattle = this.room.phase === 'battle';
 		const remainingSeatKey = leavingIndex === 0 ? 'p2' : 'p1';
 		this.room.players.splice(leavingIndex, 1);
 
 		if (this.room.players.length === 0) {
 			// 방에 아무도 없음 — 다음 접속이 완전히 새 방으로 시작하도록 정리
-			this.room = { players: [], phase: 'lobby', battle: null, rematchRequests: [] };
+			this.room = EMPTY_ROOM();
 			await this.persist();
 			return;
 		}
@@ -132,6 +149,12 @@ export class BattleRoom extends DurableObject {
 
 		this.room.players[seatIndex].charId = charId;
 		this.room.phase = 'select';
+
+		if (this.room.vsAI) {
+			const aiPlayer = this.room.players.find((p) => p.isAI);
+			if (aiPlayer && !aiPlayer.charId) aiPlayer.charId = chooseAiCharId();
+		}
+
 		await this.persist();
 		this.broadcastRoomState();
 
@@ -174,25 +197,60 @@ export class BattleRoom extends DurableObject {
 		await this.persist();
 		this.broadcastAll(S2C.BATTLE_TURN, { events, snapshot: state });
 
-		if (state.winner) {
-			const winnerPlayer = this.room.players[state.winner === 'p1' ? 0 : 1];
-			const loserPlayer = this.room.players[state.winner === 'p1' ? 1 : 0];
-			winnerPlayer.streak += 1;
-			loserPlayer.streak = 0;
-			this.room.phase = 'ended';
-			await this.persist();
-			this.broadcastAll(S2C.BATTLE_END, {
-				winnerKey: state.winner,
-				reason: state.reason,
-				streaks: this.streakMap(),
-			});
+		const ended = await this.finalizeIfWinner(state);
+		if (!ended && this.room.vsAI) {
+			await this.maybeTakeAiTurn();
 		}
+	}
+
+	async finalizeIfWinner(state) {
+		if (!state.winner) return false;
+		const winnerPlayer = this.room.players[state.winner === 'p1' ? 0 : 1];
+		const loserPlayer = this.room.players[state.winner === 'p1' ? 1 : 0];
+		winnerPlayer.streak += 1;
+		loserPlayer.streak = 0;
+		this.room.phase = 'ended';
+		await this.persist();
+		this.broadcastAll(S2C.BATTLE_END, {
+			winnerKey: state.winner,
+			reason: state.reason,
+			streaks: this.streakMap(),
+		});
+		return true;
+	}
+
+	// AI 대전에서 사람의 행동 처리가 끝난 뒤, 다음 턴이 AI 차례면 서버가 곧바로 대신 행동한다.
+	async maybeTakeAiTurn() {
+		const aiIndex = this.room.players.findIndex((p) => p.isAI);
+		if (aiIndex === -1) return;
+		const aiSeatKey = aiIndex === 0 ? 'p1' : 'p2';
+		if (this.room.battle.activePlayer !== aiSeatKey) return;
+
+		const skillId = chooseAiSkill(this.room.battle, aiSeatKey);
+		const { state, events, error } = applyAction(this.room.battle, aiSeatKey, skillId, this.room.battle.turnSeq);
+		if (error) {
+			// 정상 동작에서는 발생하지 않아야 함(AI는 항상 유효한 스킬을 고른다) — 방어적 로그만 남긴다.
+			console.error('AI action rejected:', error);
+			return;
+		}
+
+		this.room.battle = state;
+		await this.persist();
+		this.broadcastAll(S2C.BATTLE_TURN, { events, snapshot: state });
+		await this.finalizeIfWinner(state);
 	}
 
 	async handleRematch(playerId) {
 		if (this.room.phase !== 'ended') return;
 		if (!this.room.rematchRequests.includes(playerId)) {
 			this.room.rematchRequests.push(playerId);
+		}
+		if (this.room.vsAI) {
+			// AI는 소켓이 없어 room:rematch를 보낼 수 없다 — 항상 동의한 것으로 친다.
+			const aiPlayer = this.room.players.find((p) => p.isAI);
+			if (aiPlayer && !this.room.rematchRequests.includes(aiPlayer.id)) {
+				this.room.rematchRequests.push(aiPlayer.id);
+			}
 		}
 		if (this.room.rematchRequests.length < 2) {
 			await this.persist();
@@ -235,6 +293,7 @@ export class BattleRoom extends DurableObject {
 		this.broadcastAll(S2C.ROOM_STATE, {
 			roomId: this.ctx.id.name,
 			phase: this.room.phase,
+			vsAI: this.room.vsAI,
 			players: this.room.players.map((p) => ({
 				nickname: p.nickname,
 				charId: p.charId,

@@ -27,6 +27,7 @@ function charIdOf(seatKey, snapshot) {
 
 ui.el.createRoomBtn.addEventListener('click', () => joinOrCreate('create'));
 ui.el.joinRoomBtn.addEventListener('click', () => joinOrCreate('join'));
+ui.el.aiRoomBtn.addEventListener('click', () => joinOrCreate('ai'));
 
 async function joinOrCreate(action) {
 	const nickname = ui.el.nicknameInput.value.trim();
@@ -67,7 +68,7 @@ function onRoomState(payload) {
 
 	if (payload.phase === 'lobby' || payload.phase === 'select') {
 		ui.showScreen('select');
-		ui.renderSelectScreen(payload.roomId, payload.players);
+		ui.renderSelectScreen(payload.roomId, payload.players, payload.vsAI);
 	}
 }
 
@@ -134,9 +135,8 @@ function logEvent(ev, snapshotBefore) {
 	switch (ev.type) {
 		case 'skill_cast': {
 			const charId = charIdOf(ev.actor, snapshotBefore);
-			const skill = Object.entries(CHAR_META[charId].skillIds).find(([, id]) => id === ev.skillId);
-			const label = skill ? CHAR_META[charId].skillLabels[skill[0]] : ev.skillId;
-			ui.appendLog(`${nicknameOf(ev.actor)}: ${label}`);
+			const skill = CHAR_META[charId].skills.find((s) => s.id === ev.skillId);
+			ui.appendLog(`${nicknameOf(ev.actor)}: ${skill ? skill.label : ev.skillId}`);
 			break;
 		}
 		case 'damage': {
@@ -152,6 +152,16 @@ function logEvent(ev, snapshotBefore) {
 			break;
 		case 'effect_expire':
 			ui.appendLog(`  → ${nicknameOf(ev.target)}의 ${EFFECT_LABELS[ev.effectId] || ev.effectId} 종료`);
+			break;
+		case 'mp_drain':
+			ui.appendLog(`  → ${nicknameOf(ev.target)}의 MP ${ev.amount} 흡수`);
+			break;
+		case 'mp_restore':
+			ui.appendLog(
+				ev.blocked
+					? `  → ${nicknameOf(ev.target)} 침묵으로 MP 회복 실패`
+					: `  → ${nicknameOf(ev.target)} MP ${ev.amount} 회복`,
+			);
 			break;
 	}
 }
@@ -171,7 +181,8 @@ for (const btn of ui.el.skillButtons) {
 	btn.addEventListener('click', () => {
 		if (!state.snapshot || anim.isBusy(animState) || state.actionPending) return;
 		const charId = charIdOf(state.youKey, state.snapshot);
-		const skillId = CHAR_META[charId].skillIds[btn.dataset.slot];
+		const skillId = CHAR_META[charId].skills[Number(btn.dataset.index)]?.id;
+		if (!skillId) return;
 		state.actionPending = true;
 		ui.setSkillButtonsEnabled(false);
 		net.send(C2S.BATTLE_ACTION, { skillId, turnSeq: state.snapshot.turnSeq });

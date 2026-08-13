@@ -13,6 +13,22 @@
 			"payload": { "stat": "atk", "mult": 0.7 }
 		}
 	},
+	"warrior_guard": {
+		"charId": "warrior", "label": "방어 태세", "kind": "buff",
+		"mpCost": 10, "cooldown": 3,
+		"appliesEffect": {
+			"id": "guard", "kind": "stat_mod", "duration": 2, "stackRule": "refresh",
+			"payload": { "stat": "def", "mult": 0.5 }
+		}
+	},
+	"warrior_war_cry": {
+		"charId": "warrior", "label": "투지", "kind": "buff",
+		"mpCost": 15, "cooldown": 4,
+		"appliesEffect": {
+			"id": "war_cry", "kind": "stat_mod", "duration": 3, "stackRule": "refresh",
+			"payload": { "stat": "atk", "mult": 1.4 }
+		}
+	},
 
 	"archer_shot": {
 		"charId": "archer", "label": "사격", "kind": "damage",
@@ -26,6 +42,14 @@
 			"payload": { "tickRatio": 0.5 }
 		}
 	},
+	"archer_rapid_shot": {
+		"charId": "archer", "label": "속사", "kind": "damage",
+		"mpCost": 14, "cooldown": 0, "hits": 2, "multiplier": 0.7, "variance": 0.2
+	},
+	"archer_aimed_shot": {
+		"charId": "archer", "label": "조준 사격", "kind": "damage",
+		"mpCost": 16, "cooldown": 2, "multiplier": 1.6, "variance": 0.05, "ignoreDef": true
+	},
 
 	"mage_bolt": {
 		"charId": "mage", "label": "마력탄", "kind": "damage",
@@ -38,6 +62,14 @@
 			"id": "silence", "kind": "control", "duration": 2, "stackRule": "refresh",
 			"payload": { "block": "mpRegen" }
 		}
+	},
+	"mage_mana_burn": {
+		"charId": "mage", "label": "마나 번", "kind": "drain",
+		"mpCost": 14, "cooldown": 2, "multiplier": 0.4, "variance": 0.1, "mpDrainRatio": 1.8
+	},
+	"mage_focus": {
+		"charId": "mage", "label": "집중", "kind": "restore_mp",
+		"mpCost": 0, "cooldown": 4, "restoreRatio": 0.25
 	},
 
 	"heal_common": {

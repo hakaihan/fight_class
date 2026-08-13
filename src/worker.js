@@ -38,7 +38,7 @@ async function handleWebSocketUpgrade(request, env, url) {
 	}
 
 	let roomId;
-	if (action === 'create') {
+	if (action === 'create' || action === 'ai') {
 		roomId = generateRoomCode();
 	} else if (action === 'join') {
 		roomId = (url.searchParams.get('roomId') || '').trim().toUpperCase();

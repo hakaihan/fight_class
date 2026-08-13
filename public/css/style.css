@@ -76,8 +76,8 @@ button.primary:hover { background: #2563eb; }
 
 #battle-canvas { background: #111827; border-radius: 0.75rem; max-width: 100%; }
 
-.skill-bar { display: flex; gap: 0.75rem; width: min(800px, 100%); }
-.skill-btn { margin-top: 0; }
+.skill-bar { display: flex; flex-wrap: wrap; gap: 0.6rem; width: min(800px, 100%); }
+.skill-btn { flex: 1 1 140px; margin-top: 0; padding: 0.6rem 0.4rem; font-size: 0.9rem; }
 
 .battle-log {
   width: min(800px, 100%); height: 90px; overflow-y: auto; background: #1f2937;
