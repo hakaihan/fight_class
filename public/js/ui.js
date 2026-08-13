@@ -63,7 +63,9 @@ export function markCharSelected(charId) {
 export function setSkillLabels(charId) {
 	const meta = CHAR_META[charId];
 	for (const btn of el.skillButtons) {
-		btn.textContent = meta.skillLabels[btn.dataset.slot];
+		const skill = meta.skills[Number(btn.dataset.index)];
+		btn.textContent = skill ? skill.label : '';
+		btn.style.display = skill ? '' : 'none';
 	}
 }
 

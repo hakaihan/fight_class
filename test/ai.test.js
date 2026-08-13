@@ -21,10 +21,28 @@ test('MP가 부족하면 공격 스킬 대신 기본 공격을 쓴다', () => {
 	assert.equal(chooseAiSkill(state, 'p2'), 'warrior_slash');
 });
 
-test('공격 스킬이 쿨다운 중이면 기본 공격을 쓴다', () => {
+test('여러 공격 스킬 중 쓸 수 있는 것 중 위력이 가장 큰 걸 고른다', () => {
 	const state = createInitialBattleState({ id: 'p1', charId: 'archer' }, { id: 'p2', charId: 'archer' });
-	state.players.p2.cooldowns.archer_pierce = 2;
+	// archer_aimed_shot(위력 1.6) > archer_rapid_shot(0.7*2=1.4) > archer_pierce(1.3) 순
+	assert.equal(chooseAiSkill(state, 'p2'), 'archer_aimed_shot');
+});
+
+test('가장 위력이 큰 스킬이 쿨다운 중이면 다음으로 위력이 큰 걸 고른다', () => {
+	const state = createInitialBattleState({ id: 'p1', charId: 'archer' }, { id: 'p2', charId: 'archer' });
+	state.players.p2.cooldowns.archer_aimed_shot = 1;
+	assert.equal(chooseAiSkill(state, 'p2'), 'archer_rapid_shot');
+});
+
+test('쓸 수 있는 스킬이 하나도 없으면 MP가 안 드는 기본 공격을 쓴다', () => {
+	const state = createInitialBattleState({ id: 'p1', charId: 'archer' }, { id: 'p2', charId: 'archer' });
+	state.players.p2.mp = 0; // 기본 공격 말고는 전부 MP 부족
 	assert.equal(chooseAiSkill(state, 'p2'), 'archer_shot');
+});
+
+test('버프 스킬은 다른 공격 스킬을 못 쓸 때만 보조로 사용한다', () => {
+	const state = createInitialBattleState({ id: 'p1', charId: 'warrior' }, { id: 'p2', charId: 'warrior' });
+	state.players.p2.mp = 12; // warrior_smash(20)는 못 쓰지만 warrior_guard(10)는 쓸 수 있음
+	assert.equal(chooseAiSkill(state, 'p2'), 'warrior_guard');
 });
 
 test('체력이 40% 이하이고 회복을 쓸 수 있으면 회복을 우선한다', () => {

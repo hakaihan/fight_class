@@ -5,7 +5,7 @@
 // 순수 Node(`node --test`)에서도 그대로 import할 수 있게 한다.
 import characters from './data/characters.json' with { type: 'json' };
 import skills from './data/skills.json' with { type: 'json' };
-import { applyEffect, currentAtk, isBlocked, tickEffects } from './effects.js';
+import { applyEffect, currentAtk, damageTakenMult, isBlocked, tickEffects } from './effects.js';
 
 export function createInitialBattleState(p1, p2) {
 	return {
@@ -45,6 +45,22 @@ function rollVariance(base, variance) {
 	if (!variance) return base;
 	const delta = base * variance;
 	return base + (Math.random() * 2 - 1) * delta;
+}
+
+function cloneEffect(effect) {
+	return { ...effect, payload: { ...effect.payload } };
+}
+
+// 공격자 atk 기준으로 한 방(hit) 데미지를 굴린다. 방어 태세 등 'def' 배율은
+// ignoreDef가 아닌 한 대상 쪽에서 적용된다.
+function rollHit(atk, skill, target) {
+	const raw = rollVariance(atk * skill.multiplier, skill.variance || 0);
+	const crit = Math.random() < 0.1;
+	let amount = Math.max(1, Math.round(raw * (crit ? 1.5 : 1)));
+	if (!skill.ignoreDef) {
+		amount = Math.max(1, Math.round(amount * damageTakenMult(target)));
+	}
+	return { amount, crit };
 }
 
 // 단 하나의 battle:action을 처리한다. state는 변경하지 않고 새 state를 반환한다.
@@ -87,14 +103,15 @@ export function applyAction(state, actorKey, skillId, turnSeq) {
 
 	if (skill.kind === 'damage') {
 		const atk = currentAtk(nextActor);
-		const raw = rollVariance(atk * skill.multiplier, skill.variance || 0);
-		const crit = Math.random() < 0.1;
-		const amount = Math.max(1, Math.round(raw * (crit ? 1.5 : 1)));
-		nextTarget.hp = Math.max(0, nextTarget.hp - amount);
-		events.push({ type: 'damage', target: targetKey, amount, crit });
+		const hits = skill.hits || 1;
+		for (let i = 0; i < hits; i++) {
+			const { amount, crit } = rollHit(atk, skill, nextTarget);
+			nextTarget.hp = Math.max(0, nextTarget.hp - amount);
+			events.push({ type: 'damage', target: targetKey, amount, crit });
+		}
 
 		if (skill.appliesEffect) {
-			const effect = { ...skill.appliesEffect, payload: { ...skill.appliesEffect.payload } };
+			const effect = cloneEffect(skill.appliesEffect);
 			if (effect.kind === 'dot') {
 				effect.payload.amount = Math.max(1, Math.round(atk * effect.payload.tickRatio));
 			}
@@ -105,6 +122,29 @@ export function applyAction(state, actorKey, skillId, turnSeq) {
 		const amount = Math.round(nextActor.maxHp * skill.healRatio);
 		nextActor.hp = Math.min(nextActor.maxHp, nextActor.hp + amount);
 		events.push({ type: 'heal', target: actorKey, amount });
+	} else if (skill.kind === 'buff') {
+		// 자기 자신에게 거는 상태 효과 (데미지/회복 없음) — 전사의 방어 태세/투지 등
+		const effect = cloneEffect(skill.appliesEffect);
+		applyEffect(nextActor, effect);
+		events.push({ type: 'effect_apply', target: actorKey, effectId: effect.id, duration: effect.duration });
+	} else if (skill.kind === 'drain') {
+		// 소량의 피해 + 상대 MP를 직접 깎는다 (마법사의 마나 번) — 자신 MP가 늘지는 않는다.
+		const atk = currentAtk(nextActor);
+		const { amount, crit } = rollHit(atk, skill, nextTarget);
+		nextTarget.hp = Math.max(0, nextTarget.hp - amount);
+		events.push({ type: 'damage', target: targetKey, amount, crit });
+
+		const drained = Math.min(nextTarget.mp, Math.round(atk * (skill.mpDrainRatio || 0)));
+		nextTarget.mp -= drained;
+		if (drained > 0) {
+			events.push({ type: 'mp_drain', target: targetKey, amount: drained });
+		}
+	} else if (skill.kind === 'restore_mp') {
+		// 자신 MP를 회복 — 침묵(mpRegen 봉인) 상태면 이 회복도 막힌다.
+		const blocked = isBlocked(nextActor, 'mpRegen');
+		const amount = blocked ? 0 : Math.round(nextActor.maxMp * skill.restoreRatio);
+		nextActor.mp = Math.min(nextActor.maxMp, nextActor.mp + amount);
+		events.push({ type: 'mp_restore', target: actorKey, amount, blocked });
 	}
 
 	if (skill.cooldown > 0) {

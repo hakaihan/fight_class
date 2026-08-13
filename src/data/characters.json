@@ -7,7 +7,7 @@
 		"mpRegen": 8,
 		"color": "#e5e7eb",
 		"weapon": "sword",
-		"skills": { "basic": "warrior_slash", "attack": "warrior_smash", "heal": "heal_common" }
+		"skills": ["warrior_slash", "warrior_smash", "warrior_guard", "warrior_war_cry", "heal_common"]
 	},
 	"archer": {
 		"name": "궁수",
@@ -17,7 +17,7 @@
 		"mpRegen": 10,
 		"color": "#86efac",
 		"weapon": "bow",
-		"skills": { "basic": "archer_shot", "attack": "archer_pierce", "heal": "heal_common" }
+		"skills": ["archer_shot", "archer_pierce", "archer_rapid_shot", "archer_aimed_shot", "heal_common"]
 	},
 	"mage": {
 		"name": "마법사",
@@ -27,6 +27,6 @@
 		"mpRegen": 12,
 		"color": "#c4b5fd",
 		"weapon": "staff",
-		"skills": { "basic": "mage_bolt", "attack": "mage_burst", "heal": "heal_common" }
+		"skills": ["mage_bolt", "mage_burst", "mage_mana_burn", "mage_focus", "heal_common"]
 	}
 }

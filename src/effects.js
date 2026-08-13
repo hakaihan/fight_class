@@ -2,11 +2,13 @@
 // appliesEffect 한 줄을 추가하는 것으로 끝난다 (이 파일을 고칠 필요 없음).
 //
 //   dot       — 매 턴 종료 시 payload.amount만큼 고정 피해
-//   stat_mod  — payload.stat 스탯에 payload.mult 배율 적용 (지금은 'atk'만 사용)
+//   stat_mod  — payload.stat 스탯에 payload.mult 배율 적용 ('atk' = 내가 주는 피해,
+//               'def' = 내가 받는 피해). 자기 자신에게도(버프), 상대에게도(디버프) 걸 수 있다.
 //   control   — payload.block에 적힌 행동을 봉인 (지금은 'mpRegen'만 사용)
 //
 // v1에서는 stackRule을 전부 'refresh'로 취급한다: 같은 id의 효과가 다시 걸리면
-// 기존 것을 새 duration으로 덮어쓴다 (중첩하지 않음).
+// 기존 것을 새 duration으로 덮어쓴다 (중첩하지 않음). 다만 id가 다른 stat_mod 효과들은
+// (예: 상대가 건 공격력 디버프 + 내가 건 공격력 버프) 서로 배율을 곱해서 함께 적용된다.
 
 export function applyEffect(playerState, effect) {
 	const idx = playerState.effects.findIndex((e) => e.id === effect.id);
@@ -21,10 +23,21 @@ export function getEffect(playerState, effectId) {
 	return playerState.effects.find((e) => e.id === effectId);
 }
 
+function statMult(playerState, stat) {
+	let mult = 1;
+	for (const e of playerState.effects) {
+		if (e.kind === 'stat_mod' && e.payload.stat === stat) mult *= e.payload.mult;
+	}
+	return mult;
+}
+
 export function currentAtk(playerState) {
-	const mod = playerState.effects.find((e) => e.kind === 'stat_mod' && e.payload.stat === 'atk');
-	if (!mod) return playerState.baseAtk;
-	return Math.round(playerState.baseAtk * mod.payload.mult);
+	return Math.round(playerState.baseAtk * statMult(playerState, 'atk'));
+}
+
+// 받는 피해에 곱해지는 배율 (예: 전사의 방어 태세 0.5 = 받는 피해 절반)
+export function damageTakenMult(playerState) {
+	return statMult(playerState, 'def');
 }
 
 export function isBlocked(playerState, action) {
